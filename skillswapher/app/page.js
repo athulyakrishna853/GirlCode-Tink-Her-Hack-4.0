@@ -65,17 +65,69 @@
 // }
 
 
+// "use client";
+
+// import { auth } from "../lib/firebase";
+// import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+// import { useRouter } from "next/navigation";
+// export default function Home() {
+  
+//   const router = useRouter();
+//   const login = async () => {
+//     const provider = new GoogleAuthProvider();
+//     await signInWithPopup(auth, provider);
+//     alert("Logged in successfully!");
+//   };
+
+//   return (
+//     <div className="flex h-screen items-center justify-center bg-pink-50">
+//       <div className="text-center">
+//         <h1 className="text-4xl font-bold text-pink-600">
+//           Welcome to SkillSwapHer 💜
+//         </h1>
+//         <button
+//           onClick={login}
+//           className="mt-6 bg-pink-500 text-white px-6 py-3 rounded-lg"
+//         >
+//           Login with Google
+//         </button>
+//       </div>
+//     </div>
+//   );
+// }
 "use client";
 
 import { auth } from "../lib/firebase";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+  const db = getFirestore();
 
   const login = async () => {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
-    alert("Logged in successfully!");
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+
+      // Save user in Firestore
+      await setDoc(doc(db, "users", result.user.uid), {
+        name: result.user.displayName,
+        email: result.user.email,
+        photo: result.user.photoURL,
+        createdAt: new Date(),
+      });
+
+      alert("Logged in successfully!");
+
+      // Redirect to dashboard
+      router.push("/dashboard");
+
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Login failed");
+    }
   };
 
   return (
