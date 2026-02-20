@@ -83,6 +83,7 @@ export default function Dashboard() {
       });
 
       alert("Profile updated successfully 💜");
+      window.location.href = "/ready";
     } catch (error) {
       console.error(error);
       alert("Error saving profile");
