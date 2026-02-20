@@ -6,11 +6,11 @@
 
 ## Basic Details
 
-### Team Name: [Name]
+### Team Name: [GIRLCODE]
 
 ### Team Members
-- Member 1: [Name] - [College]
-- Member 2: [Name] - [College]
+- Member 1: [Athulya Krishna P V] - [Royal college of engineering]
+- Member 2: [Keerthana R] - [Royal college of engineering ]
 
 ### Hosted Project Link
 [mention your project hosted link here]

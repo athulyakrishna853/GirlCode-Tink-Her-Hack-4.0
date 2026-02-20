@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { auth } from "../../lib/firebase";
-import { getFirestore, doc, updateDoc } from "firebase/firestore";
+import { getFirestore, doc, updateDoc,setDoc } from "firebase/firestore";
 
 const SKILLS = [
   "Python",
@@ -76,17 +76,18 @@ export default function Dashboard() {
       const user = auth.currentUser;
 
       await updateDoc(doc(db, "users", user.uid), {
-        bio,
+        name,
         location,
         skillsOffered,
         skillsWanted,
+        email: user.email,
       });
 
       alert("Profile updated successfully 💜");
       window.location.href = "/ready";
     } catch (error) {
-      console.error(error);
-      alert("Error saving profile");
+      console.error("Error saving profile:", error);
+      alert("Something went wrong 😢");
     }
   };
 
