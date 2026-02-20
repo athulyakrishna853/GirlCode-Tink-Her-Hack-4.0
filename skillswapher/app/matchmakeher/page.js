@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getFirestore, collection, getDocs } from "firebase/firestore";
 import { auth } from "../../lib/firebase";
+import Link from "next/link";
 
 export default function MatchMakeHer() {
   const [matches, setMatches] = useState([]);
@@ -71,18 +72,31 @@ export default function MatchMakeHer() {
       )}
 
       <div className="grid md:grid-cols-2 gap-6">
-        {matches.map((user) => (
-          <div key={user.id} className="bg-white p-6 rounded-xl shadow-md">
-            <h2 className="text-xl font-semibold">{user.name}</h2>
-            <p className="text-sm text-gray-600 mb-2">
-              📍 {user.location || "Location not specified"}
-            </p>
+        {matches.map((user) => {
+          const currentUser = auth.currentUser;
+          const convId = currentUser
+            ? [currentUser.uid, user.id].sort().join("_")
+            : null;
 
-            <p className="font-medium text-purple-600">
-              Compatibility Score: {user.compatibility}
-            </p>
-          </div>
-        ))}
+          return (
+            <div key={user.id} className="bg-white p-6 rounded-xl shadow-md">
+              <h2 className="text-xl font-semibold">{user.name}</h2>
+              <p className="text-sm text-gray-600 mb-2">
+                📍 {user.location || "Location not specified"}
+              </p>
+
+              <p className="font-medium text-purple-600">Compatibility Score: {user.compatibility}</p>
+
+              {convId && (
+                <div className="mt-4">
+                  <Link href={`/chat/${convId}`} className="inline-block bg-pink-500 text-white px-4 py-2 rounded-md">
+                    Chat
+                  </Link>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
