@@ -1,0 +1,65 @@
+// Firestore security rules for SkillSwapHer
+// - `usernames/{username}` stores { uid } for fast, case-insensitive uniqueness checks
+// - `users/{uid}` stores user profile documents
+// Rules require authentication for reads and restrict writes so users can only create/update their own documents
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Reserved username mapping: doc id is the lowercased username
+    match /usernames/{username} {
+      // Allow reads so clients can look up username -> uid (needed for unauthenticated login lookups)
+      // If you don't want this public, replace with `request.auth != null` and use a server-side
+      // lookup or Cloud Function for mapping during login.
+      allow read: if true;
+
+      // Create allowed only if the caller is authenticated, the provided uid matches their auth uid,
+      // and the document for that username does not already exist.
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && !(exists(/databases/$(database)/documents/usernames/$(username)));
+
+      // Owner may update or delete their mapping
+      allow update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
+    // User profile documents
+    match /users/{uid} {
+      // Allow reads for authenticated users (apps like matchmaking need to list other users)
+      allow read: if request.auth != null;
+
+      // Creation allowed only for the authenticated user creating their own profile
+      allow create: if request.auth != null && request.auth.uid == uid;
+
+      // Users may update or delete only their own profile
+      allow update, delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Conversations and messages between matched users
+    match /conversations/{convId} {
+      // Creation allowed if authenticated and the creator is a participant
+      allow create: if request.auth != null
+        && request.resource.data.participants is list
+        && request.auth.uid in request.resource.data.participants;
+
+      // Read allowed only for participants
+      allow read: if request.auth != null && request.auth.uid in resource.data.participants;
+
+      allow update, delete: if false;
+
+      match /messages/{messageId} {
+        // Only participants can read and create messages
+        allow read, create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(convId)).data.participants;
+
+        // Only message sender can update or delete their own message
+        allow update, delete: if request.auth != null && resource.data.senderUid == request.auth.uid;
+      }
+    }
+
+    // Deny everything else by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
